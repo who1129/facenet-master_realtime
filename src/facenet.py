@@ -47,7 +47,6 @@ import time
 import datetime
 
 
-
 def triplet_loss(anchor, positive, negative, alpha):
     """Calculate the triplet loss according to the FaceNet paper
     
@@ -228,7 +227,8 @@ def train(total_loss, global_step, optimizer, learning_rate, moving_average_deca
 
     return train_op
 
-#정규화
+
+# 정규화
 def prewhiten(x):
     mean = np.mean(x)
     std = np.std(x)
@@ -262,8 +262,9 @@ def to_rgb(img):
     ret[:, :, 0] = ret[:, :, 1] = ret[:, :, 2] = img
     return ret
 
+
 def load_data(image_paths, do_random_crop, do_random_flip, image_size, do_prewhiten=True, do_save=True):
-    start=time.time()
+    start = time.time()
 
     nrof_samples = len(image_paths)
     images = np.zeros((nrof_samples, image_size, image_size, 3))
@@ -277,40 +278,65 @@ def load_data(image_paths, do_random_crop, do_random_flip, image_size, do_prewhi
         img = flip(img, do_random_flip)
 
         if do_save:
-            #npy로 저장하고 불러오기
-            save_path=os.path.dirname(image_paths[i])
-            np.save(save_path+'/'+str(i)+'.npy', img)
+            # npy로 저장하고 불러오기
+            save_path = os.path.dirname(image_paths[i])
+            np.save(save_path + '/' + str(i) + '.npy', img)
             print("save", save_path)
 
-        #print("load_img: ", image_paths[i])
+        # print("load_img: ", image_paths[i])
         images[i, :, :, :] = img
     print("time :", time.time() - start)
     return images
 
-# brief 캡쳐된 이미지 처리해서 npy로 저장
-# details
+
+# brief 캡쳐된 이미지 처리해서 npy로 저장 -
+# details classifier에서 오리지널로 사용할 때 이미지 빨리 불러오게 하기 위함.
 # author yj
 # date 10/31
 def captureimg_save_npy(capture_imgs, do_random_crop, do_random_flip, customer_path, image_size=240):
     crop_face = Detection()
-
     for img in capture_imgs:
-        #img = crop(img, do_random_crop, image_size)
         img = flip(img, do_random_flip)
-        # detect face!!!!!!!!얼굴 자른것
         face_img = crop_face.find_faces(img)
-        if face_img!=[]:
+        if face_img != []:
             face_image_save = prewhiten(face_img[0].image)
-            save=customer_path+'/'+datetime.datetime.now().strftime("%Y%m%d_%H%M%S")+'_'+str(random.randint(0, 1000))+'.npy'
+            save = customer_path + '/' + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '_' + str(
+                random.randint(0, 1000)) + '.npy'
             np.save(save, face_image_save)
+
+
+# brief 캡쳐된 이미지 처리해서 npy로 저장
+# details - classifier에서 오리지널로 사용할 때 이미지 빨리 불러오게 하기 위함.
+# author yj
+# date 10/31
+class Face:
+    def __init__(self):
+        self.name = None
+        self.bounding_box = None
+        self.image = None
+        self.container_image = None
+        self.embedding = None
+
+
+def captureimg_face(capture_imgs, image_size=240):
+    crop_face = Detection()
+    faces = []
+    face=Face()
+    print("caplen", len(capture_imgs))
+    for img in capture_imgs:
+        # detect face!!!!!!!!얼굴 자른것
+        face = crop_face.find_faces(img)
+        faces.append(face)
+    return faces
+
 
 # brief 배열로 저장된 이미지 불러오는 함수
 # details
 # author yj
 # date 10/31
 def load_data_npy(image_paths, do_random_crop, do_random_flip, image_size, do_prewhiten=True):
-    start=time.time()
-    print("image_paths: ",image_paths)
+    start = time.time()
+    print("image_paths: ", image_paths)
     nrof_samples = len(image_paths)
     images = np.zeros((nrof_samples, image_size, image_size, 3))
     for i in range(nrof_samples):
@@ -440,7 +466,8 @@ def split_dataset(dataset, split_ratio, min_nrof_images_per_class, mode):
         raise ValueError('Invalid train/test split mode "%s"' % mode)
     return train_set, test_set
 
-#모델 불러오기, 여기서 그래프 받아옴
+
+# 모델 불러오기, 여기서 그래프 받아옴
 def load_model(model, input_map=None):
     # Check if the model is a model directory (containing a metagraph and a checkpoint file)
     #  or if it is a protobuf file with a frozen graph
@@ -664,8 +691,7 @@ def write_arguments_to_file(args, filename):
             f.write('%s: %s\n' % (key, str(value)))
 
 
-
-#========================================
+# ========================================
 class Face:
     def __init__(self):
         self.name = None
@@ -673,6 +699,7 @@ class Face:
         self.image = None
         self.container_image = None
         self.embedding = None
+
 
 class Detection:
     # face detection parameters
@@ -700,7 +727,6 @@ class Detection:
                                                           self.pnet, self.rnet, self.onet,
                                                           self.threshold, self.factor)
         for bb in bounding_boxes:
-            print("herer")
             face = Face()
             face.container_image = image
             face.bounding_box = np.zeros(4, dtype=np.int32)
@@ -713,7 +739,6 @@ class Detection:
             cropped = image[face.bounding_box[1]:face.bounding_box[3], face.bounding_box[0]:face.bounding_box[2], :]
             face.image = misc.imresize(cropped, (self.face_crop_size, self.face_crop_size), interp='bilinear')
 
-            faces.append(face)
-            print("append", face.image)
+            face
 
-        return faces
+        return face

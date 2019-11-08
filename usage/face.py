@@ -8,7 +8,6 @@ from scipy import misc
 import src.align.detect_face as align_detect_face
 import src.facenet as facenet
 
-
 gpu_memory_fraction = 0.3
 debug = False
 
@@ -27,19 +26,15 @@ class Recognition:
         self.detect = Detection(min_face_size=min_face_size)
         self.encoder = Encoder(facenet_model_checkpoint)
         self.identifier = Identifier(classifier_model)
-    #얼굴 찾기
+        self.data = np.load("emb.npy")
+
     def add_identity(self, image, person_name):
         faces = self.detect.find_faces(image)
-
-        #얼굴 하나인거 확인~!
         if len(faces) == 1:
             face = faces[0]
             face.name = person_name
             face.embedding = self.encoder.generate_embedding(face)
             return faces
-        else:
-            print("여기 처리해야함")
-            #얼굴 2개일때 화면에 한 사람만 나오도록 출력
 
     def identify(self, image):
         faces = self.detect.find_faces(image)
@@ -47,35 +42,24 @@ class Recognition:
         for i, face in enumerate(faces):
             if debug:
                 cv2.imshow("Face: " + str(i), face.image)
-            #여기서 임베딩값 뽑아냄
+            # 여기서 웹캠 얼굴 임베딩값 뽑아냄
             face.embedding = self.encoder.generate_embedding(face)
-            #여기서 누구인지 식별함
-            #face.name = self.identifier.identify(face)
-            #여기서 누구인지 확인 안되면 등록하는 함수로 넘어가게
-            #if unkown?
-            data = np.load("emb.npy")
-            distances=[]
-            #거리 뽑아내서
-            print("emb data: ", data.shape)
 
-            for i in range(len(data)):
-                distances.append(np.sum(np.square(np.subtract(data[i],face.embedding))))#유클리디안 거리
-                print(str(i)+'번째: '+str(distances[i]))
-                #print(np.subtract(data[i],face.embedding))
-            print("제일 가까운 이미지: ", np.argmin(distances))
-            print("distances[np.argmin(distances)]: ", distances[np.argmin(distances)])
-
+            # Verification
+            distances = []
+            for i in range(len(self.data)):
+                distances.append(np.sum(np.square(np.subtract(self.data[i], face.embedding))))  # 유클리디안 거리
+                #print(str(i) + '번째: ' + str(distances[i]))
+                # print(np.subtract(self.data[i],face.embedding))
+            print("Min distance image No: ", np.argmin(distances)+1)
+            print("Min distance: ", distances[np.argmin(distances)])
+            #거리가 0.5 이하면 동일인
             if distances[np.argmin(distances)] < 0.5:
                 face.name = self.identifier.identify(face)
-
+            #거리가 0.5 이상이면 Unkown
             else:
                 face.name = 'Unknown'
-            print(data.shape)
-            '''
-            for i in range(0, data.shape[0]):
-                print(str(i)+"번째 사진")
-                print(distances[i])
-            '''
+
         return faces
 
 
@@ -83,14 +67,14 @@ class Identifier:
     def __init__(self, classifier_model):
         with open(classifier_model, 'rb') as infile:
             self.model, self.class_names = pickle.load(infile)
-            print(self.class_names)
+            print("identi classname:", self.class_names)
 
     def identify(self, face):
         if face.embedding is not None:
-            #임베딩값으로 예측
+            # 임베딩값으로 recognition
             predictions = self.model.predict_proba([face.embedding])
             best_class_indices = np.argmax(predictions, axis=1)
-            return self.class_names[best_class_indices[0]]#argmax가 두개일 수도...
+            return self.class_names[best_class_indices[0]]  # argmax가 두개일 수도...
 
 
 class Encoder:
@@ -104,14 +88,16 @@ class Encoder:
         images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
         embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
         phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-        #얼굴 픽셀값 정규화
+        # 얼굴 픽셀값 정규화
         prewhiten_face = facenet.prewhiten(face.image)
 
         # Run forward pass to calculate embeddings
         feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
+
+        #임베딩값 반환
         return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-#[얼굴+바운딩박스]리스트 반환
+# [얼굴+바운딩박스]리스트 반환
 class Detection:
     # face detection parameters
     threshold = [0.6, 0.7, 0.7]  # three steps's threshold

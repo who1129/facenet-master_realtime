@@ -196,7 +196,7 @@ def parse_arguments(argv):
 
 if __name__ == '__main__':
     # 학습
-    #main(parse_arguments(['TRAIN', 'datasets\\Customer', 'models\\20180402-114759\\20180402-114759.pb', 'models\datasets_classifier.pkl', '--batch_size', '1000']))
+    main(parse_arguments(['TRAIN', 'datasets\\Customer', 'models\\20180402-114759\\20180402-114759.pb', 'models\datasets_classifier.pkl', '--batch_size', '1000']))
     # 테스트
-    main(parse_arguments(['CLASSIFY', 'datasets\\Customer', 'models\\20180402-114759\\20180402-114759.pb', 'models\datasets_classifier.pkl']))
+    #main(parse_arguments(['CLASSIFY', 'datasets\\Customer', 'models\\20180402-114759\\20180402-114759.pb', 'models\datasets_classifier.pkl']))
     #main(parse_arguments(sys.argv[1:]))
