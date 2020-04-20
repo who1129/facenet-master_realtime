@@ -9,5 +9,4 @@ https://github.com/davidsandberg/facenet
 
 
 ## 실행 모습
-- https://www.youtube.com/watch?v=LDKpEuOdo-c  
 - https://youtu.be/iNahMs8BAMU
