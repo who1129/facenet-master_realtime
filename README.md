@@ -1,12 +1,12 @@
 ## facenet-master_realtime
-[가져온 facenet code]  
+[reference]  
 https://github.com/richmondu/facenet  
 https://github.com/davidsandberg/facenet
 
-## 코드 추가&변경 내용
+## added function
 - 얼굴 임베딩 값 저장 방식  
 - 새 얼굴 등록 과정
 
 
-## 실행 모습
+## demo video
 - https://youtu.be/iNahMs8BAMU
